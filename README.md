@@ -33,6 +33,9 @@ RunCat 365 is available for installation on the Microsoft Store.
 - Microsoft Store: https://apps.microsoft.com/detail/9nw5lpnvwfwj
 - Language: English
 
+## Build
+``dotnet build RunCat365.csproj -c Release --no-self-contained ``
+
 ## Contributors
 
 <a href="https://github.com/Kyome22/RunCat365/graphs/contributors">

@@ -40,11 +40,6 @@ namespace RunCat365
             startupTask ??= Task.Run(async () => await StartupTask.GetAsync("RunCatStartup")).Result;
             if (enabled)
             {
-                if (startupTask.State == StartupTaskState.Enabled) startupTask.Disable();
-                return true;
-            }
-            else
-            {
                 switch (startupTask.State)
                 {
                     case StartupTaskState.Enabled:
@@ -66,6 +61,11 @@ namespace RunCat365
                     default:
                         return false;
                 }
+            }
+            else
+            {
+                if (startupTask.State == StartupTaskState.Enabled) startupTask.Disable();
+                return true;
             }
         }
     }
@@ -91,15 +91,15 @@ namespace RunCat365
             if (rKey is null) return false;
             if (enabled)
             {
-                rKey.DeleteValue(productName, false);
-            }
-            else
-            {
                 var fileName = Environment.ProcessPath;
                 if (fileName is not null)
                 {
                     rKey.SetValue(productName, fileName);
                 }
+            }
+            else
+            {
+                rKey.DeleteValue(productName, false);
             }
             rKey.Close();
             return true;

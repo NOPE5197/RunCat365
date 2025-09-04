@@ -36,6 +36,8 @@ namespace RunCat365
             Action<FPSMaxLimit> setFPSMaxLimit,
             Func<bool> getLaunchAtStartup,
             Func<bool, bool> toggleLaunchAtStartup,
+            Func<string> getSelectedCPU,
+            Action<string> setSelectedCPU,
             Action openRepository,
             Action onExit
         )
@@ -99,10 +101,37 @@ namespace RunCat365
             };
             launchAtStartupMenu.Click += (sender, e) => HandleStartupMenuClick(sender, toggleLaunchAtStartup);
 
+            // CPU Selection Menu
+            var cpuMenu = new CustomToolStripMenuItem("CPU Selection");
+            var availableCPUs = CPURepository.GetAvailableCPUInstances();
+            foreach (var cpu in availableCPUs)
+            {
+                var displayName = cpu == "_Total" ? "Total CPU" : $"CPU{cpu}";
+                var cpuMenuItem = new CustomToolStripMenuItem(displayName)
+                {
+                    Checked = getSelectedCPU() == cpu,
+                    Tag = cpu // Store the actual CPU instance name in Tag
+                };
+                cpuMenuItem.Click += (sender, e) =>
+                {
+                    if (sender is ToolStripMenuItem item && item.Tag is string actualCPU)
+                    {
+                        HandleMenuItemSelection<string>(
+                            cpuMenu,
+                            sender,
+                            (string? s, out string result) => { result = actualCPU; return true; },
+                            cpu => setSelectedCPU(cpu)
+                        );
+                    }
+                };
+                cpuMenu.DropDownItems.Add(cpuMenuItem);
+            }
+
             var settingsMenu = new CustomToolStripMenuItem("Settings");
             settingsMenu.DropDownItems.AddRange(
                 themeMenu,
                 fpsMaxLimitMenu,
+                cpuMenu,
                 launchAtStartupMenu
             );
 
@@ -172,32 +201,63 @@ namespace RunCat365
 
         private static Bitmap? GetRunnerThumbnailBitmap(Theme systemTheme, Runner runner)
         {
-            var iconName = $"{systemTheme.GetString()}_{runner.GetString()}_0".ToLower();
+            var runnerName = runner.GetString().ToLower();
+            var iconName = $"{systemTheme.GetString().ToLower()}_{runnerName}_0";
             var obj = Resources.ResourceManager.GetObject(iconName);
+
+            // Fallback to light theme if dark icon is not found for the thumbnail
+            if (obj is null && systemTheme == Theme.Dark)
+            {
+                var fallbackIconName = $"light_{runnerName}_0";
+                obj = Resources.ResourceManager.GetObject(fallbackIconName);
+            }
+
             return obj is Icon icon ? icon.ToBitmap() : null;
         }
 
         internal void SetIcons(Theme systemTheme, Theme manualTheme, Runner runner)
         {
-            var prefix = (manualTheme == Theme.System ? systemTheme : manualTheme).GetString();
+            var theme = manualTheme == Theme.System ? systemTheme : manualTheme;
+            var prefix = theme.GetString();
             var runnerName = runner.GetString();
             var rm = Resources.ResourceManager;
             var capacity = runner.GetFrameNumber();
-            var list = new List<Icon>(capacity);
+            var newList = new List<Icon>(capacity);
+
             for (int i = 0; i < capacity; i++)
             {
                 var iconName = $"{prefix}_{runnerName}_{i}".ToLower();
                 var icon = rm.GetObject(iconName);
-                if (icon is null) continue;
-                list.Add((Icon)icon);
+
+                // Fallback to light theme if dark icon is not found
+                if (icon is null && theme == Theme.Dark)
+                {
+                    var fallbackIconName = $"light_{runnerName}_{i}".ToLower();
+                    icon = rm.GetObject(fallbackIconName);
+                }
+
+                if (icon is not null)
+                {
+                    newList.Add((Icon)icon);
+                }
             }
 
-            lock (iconLock)
+            // Only dispose old icons and switch to new ones if new icons were successfully loaded.
+            if (newList.Count > 0)
             {
-                icons.ForEach(icon => icon.Dispose());
-                icons.Clear();
-                icons.AddRange(list);
-                current = 0;
+                lock (iconLock)
+                {
+                    icons.ForEach(icon => icon.Dispose());
+                    icons.Clear();
+                    icons.AddRange(newList);
+                    current = 0;
+                    // Immediately update the icon to a valid one from the new list
+                    // to prevent the possibility of using a disposed icon.
+                    if (notifyIcon is not null)
+                    {
+                        notifyIcon.Icon = icons[current];
+                    }
+                }
             }
         }
 
@@ -207,7 +267,8 @@ namespace RunCat365
             var item = (ToolStripMenuItem)sender;
             try
             {
-                if (toggleLaunchAtStartup(item.Checked))
+                // The desired state is the opposite of the current state.
+                if (toggleLaunchAtStartup(!item.Checked))
                 {
                     item.Checked = !item.Checked;
                 }

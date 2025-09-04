@@ -16,6 +16,7 @@ namespace RunCat365
 {
     enum Runner
     {
+        Bangboo,
         Cat,
         Parrot,
         Horse,
@@ -27,6 +28,7 @@ namespace RunCat365
         {
             return runner switch
             {
+                Runner.Bangboo => "Bangboo",
                 Runner.Cat => "Cat",
                 Runner.Parrot => "Parrot",
                 Runner.Horse => "Horse",
@@ -41,6 +43,7 @@ namespace RunCat365
                 Runner.Cat => 5,
                 Runner.Parrot => 10,
                 Runner.Horse => 14,
+                Runner.Bangboo => 30,
                 _ => 0,
             };
         }

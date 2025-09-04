@@ -70,5 +70,17 @@ namespace RunCat365.Properties {
                 this["FirstLaunch"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("_Total")]
+        public string SelectedCPU {
+            get {
+                return ((string)(this["SelectedCPU"]));
+            }
+            set {
+                this["SelectedCPU"] = value;
+            }
+        }
     }
 }

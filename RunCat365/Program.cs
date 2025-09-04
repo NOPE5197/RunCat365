@@ -30,6 +30,7 @@ namespace RunCat365
 
             try
             {
+                Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
                 ApplicationConfiguration.Initialize();
                 Application.SetColorMode(SystemColorMode.System);
                 Application.Run(new RunCat365ApplicationContext());
@@ -56,6 +57,7 @@ namespace RunCat365
         private Runner runner = Runner.Cat;
         private Theme manualTheme = Theme.System;
         private FPSMaxLimit fpsMaxLimit = FPSMaxLimit.FPS40;
+        private string selectedCPU = "_Total";
         private int fetchCounter = 5;
 
         public RunCat365ApplicationContext()
@@ -64,10 +66,11 @@ namespace RunCat365
             _ = Enum.TryParse(UserSettings.Default.Runner, out runner);
             _ = Enum.TryParse(UserSettings.Default.Theme, out manualTheme);
             _ = Enum.TryParse(UserSettings.Default.FPSMaxLimit, out fpsMaxLimit);
+            selectedCPU = UserSettings.Default.SelectedCPU ?? "_Total";
 
             SystemEvents.UserPreferenceChanged += new UserPreferenceChangedEventHandler(UserPreferenceChanged);
 
-            cpuRepository = new CPURepository();
+            cpuRepository = new CPURepository(selectedCPU);
             memoryRepository = new MemoryRepository();
             storageRepository = new StorageRepository();
             launchAtStartupManager = new LaunchAtStartupManager();
@@ -82,6 +85,8 @@ namespace RunCat365
                 f => ChangeFPSMaxLimit(f),
                 () => launchAtStartupManager.GetStartup(),
                 s => launchAtStartupManager.SetStartup(s),
+                () => selectedCPU,
+                cpu => ChangeSelectedCPU(cpu),
                 () => OpenRepository(),
                 () => Application.Exit()
             );
@@ -169,6 +174,14 @@ namespace RunCat365
             UserSettings.Default.Save();
         }
 
+        private void ChangeSelectedCPU(string cpu)
+        {
+            selectedCPU = cpu;
+            UserSettings.Default.SelectedCPU = selectedCPU;
+            UserSettings.Default.Save();
+            cpuRepository.ChangeCPUInstance(selectedCPU);
+        }
+
         private void AnimationTick(object? sender, EventArgs e)
         {
             contextMenuManager.AdvanceFrame();
@@ -180,7 +193,7 @@ namespace RunCat365
             List<StorageInfo> storageValue
         )
         {
-            contextMenuManager.SetNotifyIconText(cpuInfo.GetDescription());
+            contextMenuManager.SetNotifyIconText(cpuInfo.GetDescription(selectedCPU));
 
             var systemInfoValues = new List<string>();
             systemInfoValues.AddRange(cpuInfo.GenerateIndicator());
@@ -192,8 +205,63 @@ namespace RunCat365
         private int CalculateInterval(float cpuTotalValue)
         {
             // Range of interval: 25-500 (ms) = 2-40 (fps)
-            var speed = (float)Math.Max(1.0f, (cpuTotalValue / 5.0f) * fpsMaxLimit.GetRate());
-            return (int)(500.0f / speed);
+
+            float speed;
+            int frameCount = runner.GetFrameNumber();
+
+            // Apply special animation logic for runners with 30 or more frames
+            if (frameCount >= 30)
+            {
+                if (cpuTotalValue <= 50.0f)
+                {
+                    // Scale speed from 0% to 100% as CPU goes from 0% to 50%
+                    // This means at 50% CPU, speed is already at normal max.
+                    speed = (float)Math.Max(1.0f, (cpuTotalValue / 50.0f * 5.0f) * fpsMaxLimit.GetRate());
+                }
+                else
+                {
+                    // Scale speed from 100% to 200% as CPU goes from 50% to 100%
+                    // Speed starts at normal max (5.0f) and goes up to double (10.0f)
+                    float cpuUsageAbove50 = cpuTotalValue - 50.0f;
+                    float extraSpeed = (cpuUsageAbove50 / 50.0f) * 5.0f; // Additional speed up to 5.0f
+                    speed = (float)Math.Max(1.0f, (5.0f + extraSpeed) * fpsMaxLimit.GetRate());
+                }
+            }
+            else
+            {
+                // Original logic for other runners
+                speed = (float)Math.Max(1.0f, (cpuTotalValue / 5.0f) * fpsMaxLimit.GetRate());
+            }
+
+            // The original logic seems to scale speed based on cpu/5. Let's adjust for that.
+            // Original: speed = (cpu/5) * rate. So at 100% cpu, speed is 20 * rate.
+            // Let's re-evaluate the logic based on the original formula to keep consistency.
+
+            if (frameCount >= 30)
+            {
+                if (cpuTotalValue <= 50.0f)
+                {
+                    // At 50% CPU, we want speed equivalent to 100% CPU in the old formula.
+                    // Old formula at 100% CPU: speed = (100 / 5) = 20.
+                    // New formula: we need to map 0-50 CPU to a speed of 1-20.
+                    // A simple mapping: speed = 1 + (cpuTotalValue / 50.0f) * 19
+                    speed = 1.0f + (cpuTotalValue / 50.0f) * 19.0f;
+                }
+                else
+                {
+                    // At 100% CPU, we want double the speed (40).
+                    // We need to map 50-100 CPU to a speed of 20-40.
+                    float cpuUsageAbove50 = cpuTotalValue - 50.0f;
+                    speed = 20.0f + (cpuUsageAbove50 / 50.0f) * 20.0f;
+                }
+                speed *= fpsMaxLimit.GetRate();
+            }
+            else
+            {
+                speed = (float)Math.Max(1.0f, (cpuTotalValue / 5.0f) * fpsMaxLimit.GetRate());
+            }
+
+            return (int)(500.0f / Math.Max(1.0f, speed));
         }
 
         private void FetchTick(object? state, EventArgs e)
