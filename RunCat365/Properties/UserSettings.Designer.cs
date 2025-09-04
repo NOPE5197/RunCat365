@@ -82,5 +82,41 @@ namespace RunCat365.Properties {
                 this["SelectedCPU"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Normal")]
+        public string UpdateInterval {
+            get {
+                return ((string)(this["UpdateInterval"]));
+            }
+            set {
+                this["UpdateInterval"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50%")]
+        public string AnimationThreshold {
+            get {
+                return ((string)(this["AnimationThreshold"]));
+            }
+            set {
+                this["AnimationThreshold"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        public string AnimationMaxSpeedMultiplier {
+            get {
+                return ((string)(this["AnimationMaxSpeedMultiplier"]));
+            }
+            set {
+                this["AnimationMaxSpeedMultiplier"] = value;
+            }
+        }
     }
 }

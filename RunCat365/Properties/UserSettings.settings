@@ -17,5 +17,14 @@
     <Setting Name="SelectedCPU" Type="System.String" Scope="User">
       <Value Profile="(Default)">_Total</Value>
     </Setting>
+    <Setting Name="UpdateInterval" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Normal</Value>
+    </Setting>
+    <Setting Name="AnimationThreshold" Type="System.String" Scope="User">
+      <Value Profile="(Default)">50%</Value>
+    </Setting>
+    <Setting Name="AnimationMaxSpeedMultiplier" Type="System.String" Scope="User">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

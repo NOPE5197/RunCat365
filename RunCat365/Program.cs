@@ -45,7 +45,7 @@ namespace RunCat365
     internal class RunCat365ApplicationContext : ApplicationContext
     {
         private const int FETCH_TIMER_DEFAULT_INTERVAL = 1000;
-        private const int FETCH_COUNTER_SIZE = 5;
+        private const int FETCH_COUNTER_SIZE = 1;
         private const int ANIMATE_TIMER_DEFAULT_INTERVAL = 200;
         private readonly CPURepository cpuRepository;
         private readonly MemoryRepository memoryRepository;
@@ -57,8 +57,11 @@ namespace RunCat365
         private Runner runner = Runner.Cat;
         private Theme manualTheme = Theme.System;
         private FPSMaxLimit fpsMaxLimit = FPSMaxLimit.FPS40;
+        private UpdateInterval updateInterval = UpdateInterval.Normal;
         private string selectedCPU = "_Total";
-        private int fetchCounter = 5;
+        private AnimationThreshold animationThreshold = AnimationThreshold.Percent50;
+        private AnimationMultiplier animationMaxSpeedMultiplier = AnimationMultiplier.X2;
+        private int fetchCounter = 1;
 
         public RunCat365ApplicationContext()
         {
@@ -66,7 +69,10 @@ namespace RunCat365
             _ = Enum.TryParse(UserSettings.Default.Runner, out runner);
             _ = Enum.TryParse(UserSettings.Default.Theme, out manualTheme);
             _ = Enum.TryParse(UserSettings.Default.FPSMaxLimit, out fpsMaxLimit);
+            _ = Enum.TryParse(UserSettings.Default.UpdateInterval, out updateInterval);
             selectedCPU = UserSettings.Default.SelectedCPU ?? "_Total";
+            _ = AnimationThresholdExtensions.TryParse(UserSettings.Default.AnimationThreshold, out animationThreshold);
+            _ = AnimationMultiplierExtensions.TryParse(UserSettings.Default.AnimationMaxSpeedMultiplier, out animationMaxSpeedMultiplier);
 
             SystemEvents.UserPreferenceChanged += new UserPreferenceChangedEventHandler(UserPreferenceChanged);
 
@@ -87,6 +93,12 @@ namespace RunCat365
                 s => launchAtStartupManager.SetStartup(s),
                 () => selectedCPU,
                 cpu => ChangeSelectedCPU(cpu),
+                () => updateInterval,
+                i => ChangeUpdateInterval(i),
+                () => animationThreshold,
+                t => ChangeAnimationThreshold(t),
+                () => animationMaxSpeedMultiplier,
+                m => ChangeAnimationMultiplier(m),
                 () => OpenRepository(),
                 () => Application.Exit()
             );
@@ -100,7 +112,7 @@ namespace RunCat365
 
             fetchTimer = new FormsTimer
             {
-                Interval = FETCH_TIMER_DEFAULT_INTERVAL
+                Interval = updateInterval.GetInterval()
             };
             fetchTimer.Tick += new EventHandler(FetchTick);
             fetchTimer.Start();
@@ -174,12 +186,34 @@ namespace RunCat365
             UserSettings.Default.Save();
         }
 
+        private void ChangeUpdateInterval(UpdateInterval interval)
+        {
+            updateInterval = interval;
+            fetchTimer.Interval = updateInterval.GetInterval();
+            UserSettings.Default.UpdateInterval = updateInterval.ToString();
+            UserSettings.Default.Save();
+        }
+
         private void ChangeSelectedCPU(string cpu)
         {
             selectedCPU = cpu;
             UserSettings.Default.SelectedCPU = selectedCPU;
             UserSettings.Default.Save();
             cpuRepository.ChangeCPUInstance(selectedCPU);
+        }
+
+        private void ChangeAnimationThreshold(AnimationThreshold threshold)
+        {
+            animationThreshold = threshold;
+            UserSettings.Default.AnimationThreshold = threshold.GetString();
+            UserSettings.Default.Save();
+        }
+
+        private void ChangeAnimationMultiplier(AnimationMultiplier multiplier)
+        {
+            animationMaxSpeedMultiplier = multiplier;
+            UserSettings.Default.AnimationMaxSpeedMultiplier = multiplier.GetString();
+            UserSettings.Default.Save();
         }
 
         private void AnimationTick(object? sender, EventArgs e)
@@ -212,52 +246,30 @@ namespace RunCat365
             // Apply special animation logic for runners with 30 or more frames
             if (frameCount >= 30)
             {
-                if (cpuTotalValue <= 50.0f)
-                {
-                    // Scale speed from 0% to 100% as CPU goes from 0% to 50%
-                    // This means at 50% CPU, speed is already at normal max.
-                    speed = (float)Math.Max(1.0f, (cpuTotalValue / 50.0f * 5.0f) * fpsMaxLimit.GetRate());
-                }
-                else
-                {
-                    // Scale speed from 100% to 200% as CPU goes from 50% to 100%
-                    // Speed starts at normal max (5.0f) and goes up to double (10.0f)
-                    float cpuUsageAbove50 = cpuTotalValue - 50.0f;
-                    float extraSpeed = (cpuUsageAbove50 / 50.0f) * 5.0f; // Additional speed up to 5.0f
-                    speed = (float)Math.Max(1.0f, (5.0f + extraSpeed) * fpsMaxLimit.GetRate());
-                }
-            }
-            else
-            {
-                // Original logic for other runners
-                speed = (float)Math.Max(1.0f, (cpuTotalValue / 5.0f) * fpsMaxLimit.GetRate());
-            }
+                float threshold = animationThreshold.GetValue();
+                float multiplier = animationMaxSpeedMultiplier.GetValue();
 
-            // The original logic seems to scale speed based on cpu/5. Let's adjust for that.
-            // Original: speed = (cpu/5) * rate. So at 100% cpu, speed is 20 * rate.
-            // Let's re-evaluate the logic based on the original formula to keep consistency.
-
-            if (frameCount >= 30)
-            {
-                if (cpuTotalValue <= 50.0f)
+                if (cpuTotalValue <= threshold)
                 {
-                    // At 50% CPU, we want speed equivalent to 100% CPU in the old formula.
+                    // Scale speed from 0% to 100% as CPU goes from 0% to threshold
+                    // At threshold CPU, we want speed equivalent to 100% CPU in the old formula.
                     // Old formula at 100% CPU: speed = (100 / 5) = 20.
-                    // New formula: we need to map 0-50 CPU to a speed of 1-20.
-                    // A simple mapping: speed = 1 + (cpuTotalValue / 50.0f) * 19
-                    speed = 1.0f + (cpuTotalValue / 50.0f) * 19.0f;
+                    // New formula: we need to map 0-threshold CPU to a speed of 1-20.
+                    speed = 1.0f + (cpuTotalValue / threshold) * 19.0f;
                 }
                 else
                 {
-                    // At 100% CPU, we want double the speed (40).
-                    // We need to map 50-100 CPU to a speed of 20-40.
-                    float cpuUsageAbove50 = cpuTotalValue - 50.0f;
-                    speed = 20.0f + (cpuUsageAbove50 / 50.0f) * 20.0f;
+                    // At 100% CPU, we want `multiplier` times the speed.
+                    // We need to map threshold-100 CPU to a speed of 20 to 20 * multiplier.
+                    float cpuUsageAboveThreshold = cpuTotalValue - threshold;
+                    float speedRange = 20.0f * (multiplier - 1.0f);
+                    speed = 20.0f + (cpuUsageAboveThreshold / (100.0f - threshold)) * speedRange;
                 }
                 speed *= fpsMaxLimit.GetRate();
             }
             else
             {
+                // Original logic for other runners
                 speed = (float)Math.Max(1.0f, (cpuTotalValue / 5.0f) * fpsMaxLimit.GetRate());
             }
 

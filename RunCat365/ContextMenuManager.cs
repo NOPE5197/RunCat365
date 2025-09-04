@@ -38,6 +38,12 @@ namespace RunCat365
             Func<bool, bool> toggleLaunchAtStartup,
             Func<string> getSelectedCPU,
             Action<string> setSelectedCPU,
+            Func<UpdateInterval> getUpdateInterval,
+            Action<UpdateInterval> setUpdateInterval,
+            Func<AnimationThreshold> getAnimationThreshold,
+            Action<AnimationThreshold> setAnimationThreshold,
+            Func<AnimationMultiplier> getAnimationMultiplier,
+            Action<AnimationMultiplier> setAnimationMultiplier,
             Action openRepository,
             Action onExit
         )
@@ -79,6 +85,22 @@ namespace RunCat365
                 _ => null
             );
 
+            var updateIntervalMenu = new CustomToolStripMenuItem("Update Interval");
+            updateIntervalMenu.SetupSubMenusFromEnum<UpdateInterval>(
+                i => i.GetString(),
+                (parent, sender, e) =>
+                {
+                    HandleMenuItemSelection<UpdateInterval>(
+                        parent,
+                        sender,
+                        (string? s, out UpdateInterval i) => UpdateIntervalExtensions.TryParse(s, out i),
+                        i => setUpdateInterval(i)
+                    );
+                },
+                i => getUpdateInterval() == i,
+                _ => null
+            );
+
             var fpsMaxLimitMenu = new CustomToolStripMenuItem("FPS Max Limit");
             fpsMaxLimitMenu.SetupSubMenusFromEnum<FPSMaxLimit>(
                 f => f.GetString(),
@@ -100,6 +122,38 @@ namespace RunCat365
                 Checked = getLaunchAtStartup()
             };
             launchAtStartupMenu.Click += (sender, e) => HandleStartupMenuClick(sender, toggleLaunchAtStartup);
+
+            var animationThresholdMenu = new CustomToolStripMenuItem("Animation Threshold");
+            animationThresholdMenu.SetupSubMenusFromEnum<AnimationThreshold>(
+                t => t.GetString(),
+                (parent, sender, e) =>
+                {
+                    HandleMenuItemSelection<AnimationThreshold>(
+                        parent,
+                        sender,
+                        (string? s, out AnimationThreshold t) => AnimationThresholdExtensions.TryParse(s, out t),
+                        t => setAnimationThreshold(t)
+                    );
+                },
+                t => getAnimationThreshold() == t,
+                _ => null
+            );
+
+            var animationMultiplierMenu = new CustomToolStripMenuItem("Animation Multiplier");
+            animationMultiplierMenu.SetupSubMenusFromEnum<AnimationMultiplier>(
+                m => m.GetString(),
+                (parent, sender, e) =>
+                {
+                    HandleMenuItemSelection<AnimationMultiplier>(
+                        parent,
+                        sender,
+                        (string? s, out AnimationMultiplier m) => AnimationMultiplierExtensions.TryParse(s, out m),
+                        m => setAnimationMultiplier(m)
+                    );
+                },
+                m => getAnimationMultiplier() == m,
+                _ => null
+            );
 
             // CPU Selection Menu
             var cpuMenu = new CustomToolStripMenuItem("CPU Selection");
@@ -130,9 +184,13 @@ namespace RunCat365
             var settingsMenu = new CustomToolStripMenuItem("Settings");
             settingsMenu.DropDownItems.AddRange(
                 themeMenu,
+                updateIntervalMenu,
                 fpsMaxLimitMenu,
                 cpuMenu,
-                launchAtStartupMenu
+                launchAtStartupMenu,
+                new ToolStripSeparator(),
+                animationThresholdMenu,
+                animationMultiplierMenu
             );
 
             var endlessGameMenu = new CustomToolStripMenuItem("Endless Game");

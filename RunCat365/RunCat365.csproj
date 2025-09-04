@@ -59,6 +59,7 @@
       <DependentUpon>UserSettings.settings</DependentUpon>
     </Compile>
   </ItemGroup>
+  
 
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
