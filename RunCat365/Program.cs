@@ -265,6 +265,7 @@ namespace RunCat365
                     float speedRange = 20.0f * (multiplier - 1.0f);
                     speed = 20.0f + (cpuUsageAboveThreshold / (100.0f - threshold)) * speedRange;
                 }
+                speed = Math.Min(speed, 30.0f); // limit speed to 30.0f (60 FPS)
                 speed *= fpsMaxLimit.GetRate();
             }
             else
