@@ -18,6 +18,7 @@ namespace RunCat365
 {
     enum FPSMaxLimit
     {
+        FPS60,
         FPS40,
         FPS30,
         FPS20,
@@ -30,6 +31,7 @@ namespace RunCat365
         {
             return fpsMaxLimit switch
             {
+                FPSMaxLimit.FPS60 => "60fps",
                 FPSMaxLimit.FPS40 => "40fps",
                 FPSMaxLimit.FPS30 => "30fps",
                 FPSMaxLimit.FPS20 => "20fps",
@@ -38,39 +40,36 @@ namespace RunCat365
             };
         }
 
-        internal static float GetRate(this FPSMaxLimit fPSMaxLimit)
+        internal static int GetMinInterval(this FPSMaxLimit fPSMaxLimit)
         {
             return fPSMaxLimit switch
             {
-                FPSMaxLimit.FPS40 => 1f,
-                FPSMaxLimit.FPS30 => 0.75f,
-                FPSMaxLimit.FPS20 => 0.5f,
-                FPSMaxLimit.FPS10 => 0.25f,
-                _ => 1f,
+                FPSMaxLimit.FPS60 => 16,
+                FPSMaxLimit.FPS40 => 25,
+                FPSMaxLimit.FPS30 => 33,
+                FPSMaxLimit.FPS20 => 50,
+                FPSMaxLimit.FPS10 => 100,
+                _ => 25,
             };
         }
 
         internal static bool TryParse([NotNullWhen(true)] string? value, out FPSMaxLimit result)
         {
-            FPSMaxLimit? nullableResult = value switch
-            {
-                "40fps" => FPSMaxLimit.FPS40,
-                "30fps" => FPSMaxLimit.FPS30,
-                "20fps" => FPSMaxLimit.FPS20,
-                "10fps" => FPSMaxLimit.FPS10,
-                _ => null,
-            };
-
-            if (nullableResult is FPSMaxLimit nonNullableResult)
-            {
-                result = nonNullableResult;
-                return true;
-            }
-            else
+            if (value is null)
             {
                 result = FPSMaxLimit.FPS40;
                 return false;
             }
+            result = value switch
+            {
+                "60fps" => FPSMaxLimit.FPS60,
+                "40fps" => FPSMaxLimit.FPS40,
+                "30fps" => FPSMaxLimit.FPS30,
+                "20fps" => FPSMaxLimit.FPS20,
+                "10fps" => FPSMaxLimit.FPS10,
+                _ => FPSMaxLimit.FPS40,
+            };
+            return true;
         }
     }
 }

@@ -10,8 +10,8 @@
 
   <Identity
     Name="StudioKyome.RunCat"
-    Publisher="CN=B2C5F2BD-A1AB-42BE-A228-02E6F800BE2A"
-    Version="3.2.2.0" />
+    Publisher="CN=N.O.P.E"
+    Version="3.2.3.0" />
 
   <Properties>
     <DisplayName>RunCat 365</DisplayName>

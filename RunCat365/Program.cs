@@ -266,15 +266,16 @@ namespace RunCat365
                     speed = 20.0f + (cpuUsageAboveThreshold / (100.0f - threshold)) * speedRange;
                 }
                 speed = Math.Min(speed, 30.0f); // limit speed to 30.0f (60 FPS)
-                speed *= fpsMaxLimit.GetRate();
             }
             else
             {
                 // Original logic for other runners
-                speed = (float)Math.Max(1.0f, (cpuTotalValue / 5.0f) * fpsMaxLimit.GetRate());
+                speed = (float)Math.Max(1.0f, cpuTotalValue / 5.0f);
             }
 
-            return (int)(500.0f / Math.Max(1.0f, speed));
+            var interval = (int)(500.0f / Math.Max(1.0f, speed));
+            var minInterval = fpsMaxLimit.GetMinInterval();
+            return Math.Max(interval, minInterval);
         }
 
         private void FetchTick(object? state, EventArgs e)
