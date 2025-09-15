@@ -118,5 +118,41 @@ namespace RunCat365.Properties {
                 this["AnimationMaxSpeedMultiplier"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowNetworkSpeed {
+            get {
+                return ((bool)(this["ShowNetworkSpeed"]));
+            }
+            set {
+                this["ShowNetworkSpeed"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("KBps")]
+        public string NetworkSpeedUnit {
+            get {
+                return ((string)(this["NetworkSpeedUnit"]));
+            }
+            set {
+                this["NetworkSpeedUnit"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SelectedNetworkInterface {
+            get {
+                return ((string)(this["SelectedNetworkInterface"]));
+            }
+            set {
+                this["SelectedNetworkInterface"] = value;
+            }
+        }
     }
 }

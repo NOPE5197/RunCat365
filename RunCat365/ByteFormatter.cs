@@ -28,5 +28,16 @@ namespace RunCat365
             }
             return string.Format("{0:0.##} {1}", doubleBytes, units[i]);
         }
+
+        internal static string ToNetworkSpeedFormatted(this float bytesPerSecond, NetworkSpeedUnit unit)
+        {
+            return unit switch
+            {
+                NetworkSpeedUnit.Mbps => $"{(bytesPerSecond * 8 / 1000 / 1000):0.##} Mbps",
+                NetworkSpeedUnit.KBps => $"{(bytesPerSecond / 1024):0.##} KB/s",
+                NetworkSpeedUnit.MBps => $"{(bytesPerSecond / 1024 / 1024):0.##} MB/s",
+                _ => $"{(bytesPerSecond / 1024):0.##} KB/s",
+            };
+        }
     }
 }

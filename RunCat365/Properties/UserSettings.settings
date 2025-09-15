@@ -26,5 +26,14 @@
     <Setting Name="AnimationMaxSpeedMultiplier" Type="System.String" Scope="User">
       <Value Profile="(Default)">2</Value>
     </Setting>
+    <Setting Name="ShowNetworkSpeed" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="NetworkSpeedUnit" Type="System.String" Scope="User">
+      <Value Profile="(Default)">KBps</Value>
+    </Setting>
+    <Setting Name="SelectedNetworkInterface" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

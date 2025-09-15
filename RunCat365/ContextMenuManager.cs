@@ -44,6 +44,13 @@ namespace RunCat365
             Action<AnimationThreshold> setAnimationThreshold,
             Func<AnimationMultiplier> getAnimationMultiplier,
             Action<AnimationMultiplier> setAnimationMultiplier,
+            Func<bool> getShowNetworkSpeed,
+            Action<bool> setShowNetworkSpeed,
+            Func<NetworkSpeedUnit> getNetworkSpeedUnit,
+            Action<NetworkSpeedUnit> setNetworkSpeedUnit,
+            Func<string?> getSelectedNetworkInterface,
+            Action<string> setSelectedNetworkInterface,
+            Func<string[]> getAvailableNetworkInterfaces,
             Action openRepository,
             Action onExit
         )
@@ -186,9 +193,73 @@ namespace RunCat365
                 themeMenu,
                 updateIntervalMenu,
                 fpsMaxLimitMenu,
-                cpuMenu,
-                launchAtStartupMenu,
-                new ToolStripSeparator(),
+                cpuMenu
+            );
+
+            var networkMenu = new CustomToolStripMenuItem("Network");
+            var showNetworkSpeedMenu = new CustomToolStripMenuItem("Show on Tray Icon")
+            {
+                Checked = getShowNetworkSpeed()
+            };
+            showNetworkSpeedMenu.Click += (sender, e) =>
+            {
+                if (sender is ToolStripMenuItem item)
+                {
+                    item.Checked = !item.Checked;
+                    setShowNetworkSpeed(item.Checked);
+                }
+            };
+
+            var networkSpeedUnitMenu = new CustomToolStripMenuItem("Speed Unit");
+            networkSpeedUnitMenu.SetupSubMenusFromEnum<NetworkSpeedUnit>(
+                u => u.GetString(),
+                (parent, sender, e) =>
+                {
+                    HandleMenuItemSelection<NetworkSpeedUnit>(
+                        parent,
+                        sender,
+                        (string? s, out NetworkSpeedUnit u) => Enum.TryParse(s, true, out u),
+                        u => setNetworkSpeedUnit(u)
+                    );
+                },
+                u => getNetworkSpeedUnit() == u,
+                _ => null
+            );
+
+            var networkInterfaceMenu = new CustomToolStripMenuItem("Network Interface");
+            var availableInterfaces = getAvailableNetworkInterfaces();
+            foreach (var networkInterface in availableInterfaces)
+            {
+                var interfaceMenuItem = new CustomToolStripMenuItem(networkInterface)
+                {
+                    Checked = getSelectedNetworkInterface() == networkInterface,
+                    Tag = networkInterface
+                };
+                interfaceMenuItem.Click += (sender, e) =>
+                {
+                    if (sender is ToolStripMenuItem item && item.Tag is string actualInterface)
+                    {
+                        HandleMenuItemSelection<string>(
+                            networkInterfaceMenu,
+                            sender,
+                            (string? s, out string result) => { result = actualInterface; return true; },
+                            i => setSelectedNetworkInterface(i)
+                        );
+                    }
+                };
+                networkInterfaceMenu.DropDownItems.Add(interfaceMenuItem);
+            }
+            
+            networkMenu.DropDownItems.AddRange(
+                showNetworkSpeedMenu,
+                networkSpeedUnitMenu,
+                networkInterfaceMenu
+            );
+
+            settingsMenu.DropDownItems.Add(networkMenu);
+            settingsMenu.DropDownItems.Add(launchAtStartupMenu);
+            settingsMenu.DropDownItems.Add(new ToolStripSeparator());
+            settingsMenu.DropDownItems.AddRange(
                 animationThresholdMenu,
                 animationMultiplierMenu
             );

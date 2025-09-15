@@ -18,7 +18,7 @@
     <PackageTags>cpu;cat;taskbar</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>app_icon.png</PackageIcon>
-    <Version>3.2.3</Version>
+    <Version>3.2.4</Version>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <StartupObject>RunCat365.Program</StartupObject>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
@@ -27,6 +27,10 @@
     <NoWarn>$(NoWarn);WFO5001</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.0-preview.6.24327.7" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="resources\app_icon.ico" />

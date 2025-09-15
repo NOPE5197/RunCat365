@@ -28,7 +28,7 @@ namespace RunCat365
     {
         internal static string GetDescription(this CPUInfo cpuInfo, string cpuInstance = "_Total")
         {
-            var displayName = cpuInstance == "_Total" ? "CPU" : cpuInstance;
+            var displayName = cpuInstance == "_Total" ? "CPU" : $"CPU {cpuInstance}";
             return $"{displayName}: {cpuInfo.Total:f1}%";
         }
 

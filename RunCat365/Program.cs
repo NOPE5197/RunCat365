@@ -50,6 +50,7 @@ namespace RunCat365
         private readonly CPURepository cpuRepository;
         private readonly MemoryRepository memoryRepository;
         private readonly StorageRepository storageRepository;
+        private readonly NetworkRepository networkRepository;
         private readonly LaunchAtStartupManager launchAtStartupManager;
         private readonly ContextMenuManager contextMenuManager;
         private readonly FormsTimer fetchTimer;
@@ -61,6 +62,9 @@ namespace RunCat365
         private string selectedCPU = "_Total";
         private AnimationThreshold animationThreshold = AnimationThreshold.Percent50;
         private AnimationMultiplier animationMaxSpeedMultiplier = AnimationMultiplier.X2;
+        private bool showNetworkSpeed = false;
+        private NetworkSpeedUnit networkSpeedUnit = NetworkSpeedUnit.KBps;
+        private string? selectedNetworkInterface;
         private int fetchCounter = 1;
 
         public RunCat365ApplicationContext()
@@ -73,12 +77,20 @@ namespace RunCat365
             selectedCPU = UserSettings.Default.SelectedCPU ?? "_Total";
             _ = AnimationThresholdExtensions.TryParse(UserSettings.Default.AnimationThreshold, out animationThreshold);
             _ = AnimationMultiplierExtensions.TryParse(UserSettings.Default.AnimationMaxSpeedMultiplier, out animationMaxSpeedMultiplier);
+            showNetworkSpeed = UserSettings.Default.ShowNetworkSpeed;
+            _ = Enum.TryParse(UserSettings.Default.NetworkSpeedUnit, out networkSpeedUnit);
+            selectedNetworkInterface = UserSettings.Default.SelectedNetworkInterface;
 
             SystemEvents.UserPreferenceChanged += new UserPreferenceChangedEventHandler(UserPreferenceChanged);
 
             cpuRepository = new CPURepository(selectedCPU);
             memoryRepository = new MemoryRepository();
             storageRepository = new StorageRepository();
+            networkRepository = new NetworkRepository();
+            if (!string.IsNullOrEmpty(selectedNetworkInterface))
+            {
+                networkRepository.SetInterface(selectedNetworkInterface);
+            }
             launchAtStartupManager = new LaunchAtStartupManager();
 
             contextMenuManager = new ContextMenuManager(
@@ -99,6 +111,13 @@ namespace RunCat365
                 t => ChangeAnimationThreshold(t),
                 () => animationMaxSpeedMultiplier,
                 m => ChangeAnimationMultiplier(m),
+                () => showNetworkSpeed,
+                s => ChangeShowNetworkSpeed(s),
+                () => networkSpeedUnit,
+                u => ChangeNetworkSpeedUnit(u),
+                () => selectedNetworkInterface,
+                i => ChangeSelectedNetworkInterface(i),
+                () => networkRepository.GetInterfaces(),
                 () => OpenRepository(),
                 () => Application.Exit()
             );
@@ -216,6 +235,28 @@ namespace RunCat365
             UserSettings.Default.Save();
         }
 
+        private void ChangeShowNetworkSpeed(bool show)
+        {
+            showNetworkSpeed = show;
+            UserSettings.Default.ShowNetworkSpeed = showNetworkSpeed;
+            UserSettings.Default.Save();
+        }
+
+        private void ChangeNetworkSpeedUnit(NetworkSpeedUnit unit)
+        {
+            networkSpeedUnit = unit;
+            UserSettings.Default.NetworkSpeedUnit = unit.ToString();
+            UserSettings.Default.Save();
+        }
+
+        private void ChangeSelectedNetworkInterface(string networkInterface)
+        {
+            selectedNetworkInterface = networkInterface;
+            UserSettings.Default.SelectedNetworkInterface = selectedNetworkInterface;
+            UserSettings.Default.Save();
+            networkRepository.SetInterface(selectedNetworkInterface);
+        }
+
         private void AnimationTick(object? sender, EventArgs e)
         {
             contextMenuManager.AdvanceFrame();
@@ -224,13 +265,20 @@ namespace RunCat365
         private void FetchSystemInfo(
             CPUInfo cpuInfo,
             MemoryInfo memoryInfo,
-            List<StorageInfo> storageValue
+            List<StorageInfo> storageValue,
+            NetworkInfo networkInfo
         )
         {
-            contextMenuManager.SetNotifyIconText(cpuInfo.GetDescription(selectedCPU));
+            var notifyIconText = cpuInfo.GetDescription(selectedCPU);
+            if (showNetworkSpeed)
+            {
+                notifyIconText += $"\nSent: {networkInfo.UploadSpeed.ToNetworkSpeedFormatted(networkSpeedUnit)}\nReceived: {networkInfo.DownloadSpeed.ToNetworkSpeedFormatted(networkSpeedUnit)}";
+            }
+            contextMenuManager.SetNotifyIconText(notifyIconText);
 
             var systemInfoValues = new List<string>();
             systemInfoValues.AddRange(cpuInfo.GenerateIndicator());
+            systemInfoValues.AddRange(networkInfo.GenerateIndicator(networkSpeedUnit));
             systemInfoValues.AddRange(memoryInfo.GenerateIndicator());
             systemInfoValues.AddRange(storageValue.GenerateIndicator());
             contextMenuManager.SetSystemInfoMenuText(string.Join("\n", [.. systemInfoValues]));
@@ -288,7 +336,8 @@ namespace RunCat365
             var cpuInfo = cpuRepository.Get();
             var memoryInfo = memoryRepository.Get();
             var storageInfo = storageRepository.Get();
-            FetchSystemInfo(cpuInfo, memoryInfo, storageInfo);
+            var networkInfo = networkRepository.GetNetworkInfo();
+            FetchSystemInfo(cpuInfo, memoryInfo, storageInfo, networkInfo);
 
             animateTimer.Stop();
             animateTimer.Interval = CalculateInterval(cpuInfo.Total);
