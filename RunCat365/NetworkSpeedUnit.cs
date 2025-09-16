@@ -34,5 +34,24 @@ namespace RunCat365
                 _ => "KB/s",
             };
         }
+
+        public static bool TryParse(string? s, out NetworkSpeedUnit result)
+        {
+            if (s is null)
+            {
+                result = NetworkSpeedUnit.KBps;
+                return false;
+            }
+            foreach (NetworkSpeedUnit unit in Enum.GetValues(typeof(NetworkSpeedUnit)))
+            {
+                if (unit.GetString() == s)
+                {
+                    result = unit;
+                    return true;
+                }
+            }
+            result = NetworkSpeedUnit.KBps;
+            return false;
+        }
     }
 }

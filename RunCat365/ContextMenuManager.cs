@@ -218,7 +218,7 @@ namespace RunCat365
                     HandleMenuItemSelection<NetworkSpeedUnit>(
                         parent,
                         sender,
-                        (string? s, out NetworkSpeedUnit u) => Enum.TryParse(s, true, out u),
+                        (string? s, out NetworkSpeedUnit u) => NetworkSpeedUnitExtensions.TryParse(s, out u),
                         u => setNetworkSpeedUnit(u)
                     );
                 },

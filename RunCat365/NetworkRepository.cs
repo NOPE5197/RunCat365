@@ -57,7 +57,7 @@ namespace RunCat365
                 instances = category.GetInstanceNames();
                 if (instances.Length > 0)
                 {
-                    instance = instances[0];
+                    instance = instances.FirstOrDefault(i => i.Contains("Realtek", StringComparison.OrdinalIgnoreCase)) ?? instances[0];
                     uploadCounter = new PerformanceCounter("Network Interface", "Bytes Sent/sec", instance);
                     downloadCounter = new PerformanceCounter("Network Interface", "Bytes Received/sec", instance);
                 }
