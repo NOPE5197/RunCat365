@@ -14,6 +14,54 @@
 
 namespace RunCat365
 {
+    internal enum AnimationThreshold
+    {
+        Percent25,
+        Percent50,
+        Percent75,
+        Percent100
+    }
+
+    internal static class AnimationThresholdExtensions
+    {
+        internal static string GetString(this AnimationThreshold threshold)
+        {
+            return threshold switch
+            {
+                AnimationThreshold.Percent25 => "25%",
+                AnimationThreshold.Percent50 => "50%",
+                AnimationThreshold.Percent75 => "75%",
+                AnimationThreshold.Percent100 => "100%",
+                _ => "50%"
+            };
+        }
+
+        internal static float GetValue(this AnimationThreshold threshold)
+        {
+            return threshold switch
+            {
+                AnimationThreshold.Percent25 => 25.0f,
+                AnimationThreshold.Percent50 => 50.0f,
+                AnimationThreshold.Percent75 => 75.0f,
+                AnimationThreshold.Percent100 => 100.0f,
+                _ => 50.0f
+            };
+        }
+
+        internal static bool TryParse(string? value, out AnimationThreshold threshold)
+        {
+            threshold = value switch
+            {
+                "25%" => AnimationThreshold.Percent25,
+                "50%" => AnimationThreshold.Percent50,
+                "75%" => AnimationThreshold.Percent75,
+                "100%" => AnimationThreshold.Percent100,
+                _ => AnimationThreshold.Percent50
+            };
+            return true;
+        }
+    }
+
     internal enum AnimationMultiplier
     {
         X1_25,

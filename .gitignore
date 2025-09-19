@@ -8,7 +8,7 @@ obj/
 TestResults
 
 /WapForStore/AppPackages/**
-/WapForStore/**
+WapForStore/
 !/WapForStore/AppPackages/rm-wap-for-store.sh
 BundleArtifacts/
 
