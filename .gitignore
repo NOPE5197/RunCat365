@@ -1,0 +1,26 @@
+# Visual Studio
+.vs/
+bin/
+obj/
+[Ll]og/
+[Ll]ogs/
+.DS_Store
+TestResults
+
+/WapForStore/AppPackages/**
+/WapForStore/**
+!/WapForStore/AppPackages/rm-wap-for-store.sh
+BundleArtifacts/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Wap
+WapForStore/**/*.assets.cache
+UpgradeLog.htm
+README.md
+LICENSE
+RunCat365.sln
