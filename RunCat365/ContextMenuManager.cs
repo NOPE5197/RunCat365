@@ -130,7 +130,7 @@ namespace RunCat365
             };
             launchAtStartupMenu.Click += (sender, e) => HandleStartupMenuClick(sender, toggleLaunchAtStartup);
 
-            var animationThresholdMenu = new CustomToolStripMenuItem("Animation Threshold");
+            var animationThresholdMenu = new CustomToolStripMenuItem("Threshold");
             animationThresholdMenu.SetupSubMenusFromEnum<AnimationThreshold>(
                 t => t.GetString(),
                 (parent, sender, e) =>
@@ -146,7 +146,7 @@ namespace RunCat365
                 _ => null
             );
 
-            var animationMultiplierMenu = new CustomToolStripMenuItem("Animation Multiplier");
+            var animationMultiplierMenu = new CustomToolStripMenuItem("Speed Multiplier");
             animationMultiplierMenu.SetupSubMenusFromEnum<AnimationMultiplier>(
                 m => m.GetString(),
                 (parent, sender, e) =>
@@ -161,6 +161,11 @@ namespace RunCat365
                 m => getAnimationMultiplier() == m,
                 _ => null
             );
+
+            // Tạo menu Animation và thêm hai menu con vào
+            var animationMenu = new CustomToolStripMenuItem("Animation");
+            animationMenu.DropDownItems.Add(animationThresholdMenu);
+            animationMenu.DropDownItems.Add(animationMultiplierMenu);
 
             // CPU Selection Menu
             var cpuMenu = new CustomToolStripMenuItem("CPU Selection");
@@ -257,12 +262,10 @@ namespace RunCat365
             );
 
             settingsMenu.DropDownItems.Add(networkMenu);
+            settingsMenu.DropDownItems.Add(animationMenu); // Thêm Animation vào sau Network
             settingsMenu.DropDownItems.Add(launchAtStartupMenu);
             settingsMenu.DropDownItems.Add(new ToolStripSeparator());
-            settingsMenu.DropDownItems.AddRange(
-                animationThresholdMenu,
-                animationMultiplierMenu
-            );
+            // Xóa hai dòng thêm animationThresholdMenu và animationMultiplierMenu trực tiếp vào settingsMenu
 
             var endlessGameMenu = new CustomToolStripMenuItem("Endless Game");
             endlessGameMenu.Click += (sender, e) => ShowOrActivateGameWindow(getSystemTheme);

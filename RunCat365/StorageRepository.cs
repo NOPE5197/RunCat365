@@ -69,7 +69,9 @@ namespace RunCat365
                     {
                         var storageInfo = new StorageInfo
                         {
-                            Name = $"{driveInfo.Name.Replace("\\", "")} Drive",
+                            Name = string.IsNullOrEmpty(driveInfo.VolumeLabel)
+                                ? $"({driveInfo.Name.TrimEnd('\\')})"
+                                : $"({driveInfo.Name.TrimEnd('\\')}) {driveInfo.VolumeLabel} ",
                             TotalSize = driveInfo.TotalSize,
                             AvailableSpaceSize = driveInfo.AvailableFreeSpace,
                             UsedSpaceSize = driveInfo.TotalSize - driveInfo.AvailableFreeSpace

@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.0-preview.6.24327.7" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>
